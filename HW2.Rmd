@@ -2,7 +2,9 @@
 title: "DATA621_HW2"
 author: "Bikram"
 date: "9/27/2022"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -21,13 +23,13 @@ you obtain the equivalent results. Finally, you will create graphical output tha
 output of classification models, such as binary logistic regression.
 
 
+### 1. Download the classification data set
 ```{r }
 
 # Download the classification output data set
 data1 <- read.csv("https://raw.githubusercontent.com/baruab/DATA-621/main/classification-output-data.csv", header=TRUE, stringsAsFactors=FALSE)
 head(data1)
 
-class(data1)
 dim(data1)
 
 # select variables class, scored.class, scored.probability
@@ -40,7 +42,7 @@ head(newdata)
 ```
 
 
-## Seems like dependent variable 'class' was regressed against several independent variables. 'Scored.Class' is the predicted variable and probability of being in class of 1 is denoted by 'scored.probability'
+#### Seems like dependent variable 'class' was regressed against several independent variables. 'Scored.Class' is the predicted variable and probability of being in class of 1 is denoted by 'scored.probability'
 
 
 
@@ -53,31 +55,87 @@ table(newdata$class, dnn="Class") %>% kable() # %>% kable_styling()
 ```
 
 
-## Predicted Class Frequency table
+#### Predicted Class Frequency table
 ```{r}
 #calculate frequency table for scored.class 
 table(newdata$scored.class, dnn="Predicted Class") %>% kable()
 
 ```
 
-
-## Raw Confusion matrix for the scored dataset representing Predicted and Actual values
+### 2. Use the table function to get the raw confusion matrix
+#### Raw Confusion matrix for the scored dataset representing Predicted and Actual values
 ```{r}
 table(newdata$class, newdata$scored.class, 
       dnn = c("Actual", "Predicted"))  %>% kable() 
 ```
 
 
-## True Positive (TP) where Actual value and Predicted values are 1 (27)
-## True Negative (TN) where Actual value and Predicted values are 0 (119)
-## False Positive (FP) where Actual value is 0 and Predicted value is 1 (5)
-## False Negative (FN) where Actual value is 1 and Predicted value is 0 (30)
+***
 
 
-## Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the accuracy of the predictions
+#### True Positive (TP) where Actual value and Predicted values are 1 (27)
+#### True Negative (TN) where Actual value and Predicted values are 0 (119)
+#### False Positive (FP) where Actual value is 0 and Predicted value is 1 (5)
+#### False Negative (FN) where Actual value is 1 and Predicted value is 0 (30)
+
+***
+
+### 3. Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the accuracy of the predictions
 ```{r}
 
+calc_Accuracy <- function(newdata) {
+   confMatrix <- table(newdata$class, newdata$scored.class, 
+      dnn = c("Actual", "Predicted"))
+   TN <- confMatrix[1,1]
+   TP <- confMatrix[2,2]
+   FP <- confMatrix[1,2]
+   FN <- confMatrix[2,1]
+   
+   Accuracy <- (TP + TN)/(TP + FP + TN +FN)
+   return (Accuracy)
+}
+
+calc_Accuracy(newdata)
+
+```
+#### Accuracy 80.66%
+
+#### Verify result using caret package
+```{r warning=FALSE, error=FALSE}
+
+library(caret)
+c_matrix <- confusionMatrix(table(newdata$class, newdata$scored.class))
+c_matrix$overall['Accuracy']
 
 
+```
+
+### 4.Write a function that takes the data set as a dataframe, with actual and predicted classifications identified and returns the classification error rate of the predictions.
+
+```{r}
+
+calc_ErrorRate <- function(newdata) {
+   confMatrix <- table(newdata$class, newdata$scored.class, 
+      dnn = c("Actual", "Predicted"))
+   TN <- confMatrix[1,1]
+   TP <- confMatrix[2,2]
+   FP <- confMatrix[1,2]
+   FN <- confMatrix[2,1]
+   
+   ErrorRate <- (FP+FN)/(TP+FP+TN+FN)
+   return (ErrorRate)
+}
+
+calc_ErrorRate(newdata)
+
+```
+
+
+#### Verify sum of Accuracy and Error Rate is 1 
+
+```{r}
+
+verify_sum <- 0.8066298  + 0.1933702
+verify_sum
 ```
 
