@@ -157,9 +157,12 @@ and returns the F1 score of the predictions.
 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 + 𝑆𝑒𝑛𝑠𝑖𝑡𝑖𝑣𝑖𝑡𝑦
 
 ```{r}
-f1 = function(data, predicted_col_name, actual_col_name) {
-  
+f1_score = function(data, predicted_col_name, actual_col_name) {
+  p = precision(data, 'scored.class', 'class') 
+  s = sensitivity(data, 'scored.class', 'class')
+  return(2*p*s/(p+s))
 } 
+print(paste0("F1 Score: ", f1_score(data, 'scored.class', 'class')))
 ```
 
 
