@@ -57,7 +57,7 @@ accuracy = function(data, predicted_col_name, actual_col_name) {
   #Accurary = (TP + TN) / (TP + FP +TN +FN)
   return(round((TP+TN)/(TP + FP + TN + FN), 4))
 }
-print(paste0("Accuracy: ", accuracy(data, 'scored.class', 'class')))
+
 ```
 
 ## 4.Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, 
@@ -150,7 +150,6 @@ print(paste0("Specificity: ", specificity(data, 'scored.class', 'class')))
 ```
 
 
-# Tora
 ## 8.  Write a function that takes the data set as a dataframe, with actual and predicted classifications identified,
 and returns the F1 score of the predictions.
 𝐹1 𝑆𝑐𝑜𝑟𝑒 = 2 × 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 × 𝑆𝑒𝑛𝑠𝑖𝑡𝑖𝑣𝑖𝑡𝑦
@@ -235,16 +234,44 @@ getROCcurve = function(col.true = "class", col.probability = "scored.probability
   return(list("AUC" = vec.AUC, "ROC" = plt.ROC))
 }
 
-getROCcurve(data = data)
+```
+
+## 11. 
+Use your created R functions and the provided classification output data set to produce all of the
+classification metrics discussed above.
+
+### Accuracy
+```{r}
+print(paste0("Accuracy: ", accuracy(data, 'scored.class', 'class')))
+```
+
+### Error rate
+```{r}
+print(paste0("Error rate: ", errorRate(data, 'scored.class', 'class')))
+```
+
+### Precision
+```{r}
+print(paste0("Precision: ", precision(data, 'scored.class', 'class')))
+```
+
+### Sensitivity/Recall
+```{r}
+print(paste0("Sensitivity: ", sensitivity(data, 'scored.class', 'class')))
+```
+
+### Specificity
+```{r}
+print(paste0("Specificity: ", specificity(data, 'scored.class', 'class')))
+```
+
+### F1 Score
+```{r}
+print(paste0("F1 Score: ", f1_score(data, 'scored.class', 'class')))
 ```
 
 
-
-
-
-
-
-
-
-
-
+### ROC Curve
+```{r}
+getROCcurve(data = data)
+```
