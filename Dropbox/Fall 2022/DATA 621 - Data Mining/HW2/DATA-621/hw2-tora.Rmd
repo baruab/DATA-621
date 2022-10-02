@@ -209,12 +209,12 @@ Write a function that generates an ROC curve from a data set with a true classif
 
 ```{r ROC}
 
-getROCcurve = function(col.true = "class", col.probability = "scored.probability", data = data) {
+getROCcurve = function(col.true = "class", col.probability = "scored.probability", data) {
   vec.TPR = c()
   vec.TNR = c()
 
   for (i in seq(0, 1, 0.01)) {
-    data = data %>% mutate(model.classification = ifelse(select(data, col.probability) < i, 0, 1))
+    data = data %>% mutate(model.classification = ifelse(unlist(select(data, col.probability)) < i, 0, 1))
     i.vec.TP = data %>% filter(model.classification == class & class == 1) %>% nrow()
     i.vec.FN = data %>% filter(model.classification != class & class == 1) %>% nrow()
     i.vec.TN = data %>% filter(model.classification == class & class == 0) %>% nrow()
@@ -235,7 +235,7 @@ getROCcurve = function(col.true = "class", col.probability = "scored.probability
   return(list("AUC" = vec.AUC, "ROC" = plt.ROC))
 }
 
-
+getROCcurve(data = data)
 ```
 
 
