@@ -9,6 +9,7 @@ output:
 
 
 ```{r}
+library(pROC)
 library(tidyr);
 library(dplyr); 
 library(kableExtra);
@@ -25,9 +26,9 @@ head(data) %>% kable() %>% kable_styling(bootstrap_options = c("striped", "hover
 ```
 
 # 2. The data set has three key columns we will use:
- class: the actual class for the observation
- scored.class: the predicted class for the observation (based on a threshold of 0.5)
- scored.probability: the predicted probability of success for the observation
+class: the actual class for the observation
+scored.class: the predicted class for the observation (based on a threshold of 0.5)
+scored.probability: the predicted probability of success for the observation
 
 Use the table() function to get the raw confusion matrix for this scored dataset. Make sure you understand 
 the output. In particular, do the rows represent the actual or predicted class? The columns?
@@ -152,8 +153,6 @@ print(paste0("specificity: ", spec(data, 'scored.class', 'class')))
 
 ## 8.  Write a function that takes the data set as a dataframe, with actual and predicted classifications identified,
 and returns the F1 score of the predictions.
-𝐹1 𝑆𝑐𝑜𝑟𝑒 = 2 × 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 × 𝑆𝑒𝑛𝑠𝑖𝑡𝑖𝑣𝑖𝑡𝑦
-𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 + 𝑆𝑒𝑛𝑠𝑖𝑡𝑖𝑣𝑖𝑡𝑦
 
 ```{r}
 f1_score = function(data, predicted_col_name, actual_col_name) {
@@ -275,13 +274,10 @@ print(paste0("F1 Score: ", f1_score(data, 'scored.class', 'class')))
 ```{r}
 getROCcurve(data = data)
 ```
-
 ## 12.
-Investigate the caret package. In particular, consider the functions confusionMatrix, Sensitivity, and 
-specificity. Apply the functions to the data set. How do the results compare with your own functions?
+Investigate the carat package. In particular, consider the functions confusionmatrix, sensitivity, and specificity. Apply the functions to the data set. How do the results compare with your own functions?
 
 all of the results that we calculated above for the confusion matrix, sensitivity, and specificity match the values givin by the matching functions as shown below. 
-
 ```{r}
 scored<-as.factor(data$scored.class)
 tclass<-as.factor(data$class)
@@ -292,14 +288,14 @@ confusionMatrix(scored, tclass)
 sensitivity(scored, tclass)
 specificity(scored, tclass)
 ```
-
-
-
 ## 13.
-Investigate the pROC package. Use it to generate an ROC curve for the data set. How do the results 
-compare with your own functions
+investigate the pROc package. use it to generate an ROC curve for the data set. How do the results compare with your own function.
+
+altogether our two ROC curves are very close to one another. Both curves show a nonlinear relationship showing our model is significantly better then a randomized model aditionally both AUC measurements are close with our handmade function having an AUC of 0.854 and the pROC function having a AUC of 0.8503. Altogether both plots look very similar and reflect that the model is a fairly good predictor of the data.both plots look very similar. 
 
 ```{r}
-
+roc_score=roc(data, class, scored.probability,plot=TRUE) #AUC score
+#ggroc(roc_score)
+auc(roc_score)
 ```
 
