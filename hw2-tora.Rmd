@@ -12,7 +12,7 @@ output:
 library(tidyr);
 library(dplyr); 
 library(kableExtra);
-
+library(caret)
 library(ggplot2)
 ```
 
@@ -57,7 +57,7 @@ accuracy = function(data, predicted_col_name, actual_col_name) {
   #Accurary = (TP + TN) / (TP + FP +TN +FN)
   return(round((TP+TN)/(TP + FP + TN + FN), 4))
 }
-print(paste0("Accuracy: ", accuracy(data, 'scored.class', 'class')))
+
 ```
 
 ## 4.Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, 
@@ -106,7 +106,7 @@ print(paste0("Precision: ", precision(data, 'scored.class', 'class')))
 ```
 
 
-## 6. Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the sensitivity of the predictions. Sensitivity is also known as recall.
+## 6. Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the sens of the predictions. Sensitivity is also known as recall.
 
 Sensitivity = TP / (TP + FN)
 
@@ -114,7 +114,7 @@ Sensitivity = TP / (TP + FN)
 
 
 ```{r sensitivity}
-sensitivity = function(data, predicted_col_name, actual_col_name) {
+sens = function(data, predicted_col_name, actual_col_name) {
   
   conf = table(data[ , predicted_col_name], data[ , actual_col_name])
   TP = conf[2,2]
@@ -125,17 +125,17 @@ sensitivity = function(data, predicted_col_name, actual_col_name) {
   #Sensitivity = TP / (TP + FN)
   return(round((TP)/(TP + FN), 4))
 }
-print(paste0("Sensitivity: ", sensitivity(data, 'scored.class', 'class')))
+print(paste0("Sensitivity: ", sens(data, 'scored.class', 'class')))
 ```
 
 
-## 7. Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the specificity of the predictions.
+## 7. Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the spec of the predictions.
 
-Specificity = TN / (TN+FP)
+specificity = TN / (TN+FP)
 
 
 ```{r specificity}
-specificity = function(data, predicted_col_name, actual_col_name) {
+spec = function(data, predicted_col_name, actual_col_name) {
   
   conf = table(data[ , predicted_col_name], data[ , actual_col_name])
   TP = conf[2,2]
@@ -143,14 +143,13 @@ specificity = function(data, predicted_col_name, actual_col_name) {
   FP = conf[2,1]
   FN = conf[1,2]
   
-  #Specificity = TN / (TN+FP)
+  #specificity= TN / (TN+FP)
   return(round((TN)/(TN + FP), 4))
 }
-print(paste0("Specificity: ", specificity(data, 'scored.class', 'class')))
+print(paste0("specificity: ", spec(data, 'scored.class', 'class')))
 ```
 
 
-Tora
 ## 8.  Write a function that takes the data set as a dataframe, with actual and predicted classifications identified,
 and returns the F1 score of the predictions.
 𝐹1 𝑆𝑐𝑜𝑟𝑒 = 2 × 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 × 𝑆𝑒𝑛𝑠𝑖𝑡𝑖𝑣𝑖𝑡𝑦
@@ -159,7 +158,7 @@ and returns the F1 score of the predictions.
 ```{r}
 f1_score = function(data, predicted_col_name, actual_col_name) {
   p = precision(data, 'scored.class', 'class') 
-  s = sensitivity(data, 'scored.class', 'class')
+  s = sens(data, 'scored.class', 'class')
   return(2*p*s/(p+s))
 } 
 print(paste0("F1 Score: ", f1_score(data, 'scored.class', 'class')))
@@ -168,21 +167,139 @@ print(paste0("F1 Score: ", f1_score(data, 'scored.class', 'class')))
 
 
 
+## 9. Before we move on, let’s consider a question that was asked: What are the bounds on the F1 score? Show that the F1 score will always be between 0 and 1. (Hint: If 0 < 𝑎 < 1 and 0 < 𝑏 < 1 then 𝑎𝑏 < 𝑎.)
+
+The F1 score is equivalent to the following:
+
+$$
+p = precision, s = Sensitivity
+$$
+
+
+$$
+F1 = \frac{2*p*s}{p + s}
+$$
+
+
+Just by eye-balling this equation (and knowing that both precision and Sensitivity are between 0 and 1), if we assume mutual exclusivity of both metrics, F1 would simplify to the following:
+
+$$
+p = 1, s = 1
+\\
+F1 = \frac{2*1*1}{1+1} = 1
+$$
+
+To figure out the minimum values, we can take the derivative of F1 and set it to zero. Since we have two metrics, we'll have to use partial derivatives:
+
+$$
+dF1/dp = 2s^2/(p+s)^2
+$$
+
+$$
+dF1/ds = 2p^2/(p+s)^2
+$$
+
+If we set both values at 0, then precision and Sensitivity  would be at 0 for the zeroes of the function. If we go back and plug those values in, F1 would be 0. 
+
+## 10.
+
+Write a function that generates an ROC curve from a data set with a true classification column (class in our example) and a probability column (scored.probability in our example). Your function should return a list that includes the plot of the ROC curve and a vector that contains the calculated area under the curve (AUC). Note that I recommend using a sequence of thresholds ranging from 0 to 1 at 0.01 intervals.
+
+
+```{r ROC}
+
+getROCcurve = function(col.true = "class", col.probability = "scored.probability", data) {
+  vec.TPR = c()
+  vec.TNR = c()
+
+  for (i in seq(0, 1, 0.01)) {
+    data = data %>% mutate(model.classification = ifelse(unlist(select(data, col.probability)) < i, 0, 1))
+    i.vec.TP = data %>% filter(model.classification == class & class == 1) %>% nrow()
+    i.vec.FN = data %>% filter(model.classification != class & class == 1) %>% nrow()
+    i.vec.TN = data %>% filter(model.classification == class & class == 0) %>% nrow()
+    i.vec.FP = data %>% filter(model.classification != class & class == 0) %>% nrow()
+    
+    vec.TPR = c(vec.TPR, (i.vec.TP/(i.vec.TP + i.vec.FN)))
+    vec.TNR = c(vec.TNR, (i.vec.TN/(i.vec.TN + i.vec.FP)))
+
+  }
+  df.ROC = data.frame(Threshold = seq(0, 1, 0.01), TNR = vec.TNR, TPR = vec.TPR)
+  df.ROC = df.ROC %>% arrange(TNR, decreasing = T)
+  plt.ROC = ggplot(aes(x = 1-(TNR), y = (TPR)), data = df.ROC) + geom_step() + labs(x = "1 - specificity", y = "Sensitivity")
+  df.AUC  = df.ROC %>% distinct(TPR, TNR)
+  
+  df.AUC <- df.AUC %>%  mutate(TNR_next = lead(TNR, n = 1L))  
+  df.AUC$width = df.AUC$TNR_next - df.AUC$TNR
+  vec.AUC = sum(df.AUC$width * df.AUC$TPR, na.rm = T)
+  return(list("AUC" = vec.AUC, "ROC" = plt.ROC))
+}
+
+```
+
+## 11. 
+Use your created R functions and the provided classification output data set to produce all of the
+classification metrics discussed above.
+
+### Accuracy
+```{r}
+print(paste0("Accuracy: ", accuracy(data, 'scored.class', 'class')))
+```
+
+### Error rate
+```{r}
+print(paste0("Error rate: ", errorRate(data, 'scored.class', 'class')))
+```
+
+### Precision
+```{r}
+print(paste0("Precision: ", precision(data, 'scored.class', 'class')))
+```
+
+### Sensitivity/Recall
+```{r}
+print(paste0("sensitivity: ", sens(data, 'scored.class', 'class')))
+```
+
+### specificity
+```{r}
+print(paste0("specificity: ", spec(data, 'scored.class', 'class')))
+```
+
+### F1 Score
+```{r}
+print(paste0("F1 Score: ", f1_score(data, 'scored.class', 'class')))
+```
+
+
+### ROC Curve
+```{r}
+getROCcurve(data = data)
+```
+
+## 12.
+Investigate the caret package. In particular, consider the functions confusionMatrix, Sensitivity, and 
+specificity. Apply the functions to the data set. How do the results compare with your own functions?
+
+all of the results that we calculated above for the confusion matrix, sensitivity, and specificity match the values givin by the matching functions as shown below. 
+
+```{r}
+scored<-as.factor(data$scored.class)
+tclass<-as.factor(data$class)
+
+confusionMatrix(scored, tclass)
+```
+```{r}
+sensitivity(scored, tclass)
+specificity(scored, tclass)
+```
 
 
 
+## 13.
+Investigate the pROC package. Use it to generate an ROC curve for the data set. How do the results 
+compare with your own functions
 
+```{r}
 
-
-
-
-
-
-
-
-
-
-
-
-
+```
 
